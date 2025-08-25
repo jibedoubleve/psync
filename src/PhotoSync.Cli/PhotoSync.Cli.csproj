@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PhotoSync.Cli</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyName>photo</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- Trim is false because Spectre.Console uses reflection -->
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Spectre.Console.Cli" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.50.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+</Project>
