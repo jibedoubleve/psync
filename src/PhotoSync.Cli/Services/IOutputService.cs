@@ -15,7 +15,7 @@ public interface IOutputService
 
     void RenderDriveList(IEnumerable<Drive> drives);
 
-    void RenderKeyValueList(string title, IEnumerable<(string Key, string Value)> tableRows);
+    void RenderKeyValueList(string title, IEnumerable<Parameter> tableRows);
 
     void Information(string message, bool newline = true);
 

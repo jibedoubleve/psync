@@ -1,11 +1,9 @@
+using ConsoleAppFramework;
 using PhotoSync.Cli.Services;
-using Spectre.Console;
-using Spectre.Console.Cli;
-using Spectre.Console.Rendering;
 
 namespace PhotoSync.Cli.Commands;
 
-public sealed class ListDriveCommand : Command<ListDriveCommand.Settings>
+public sealed class ListDriveCommand
 {
     #region Fields
 
@@ -26,22 +24,28 @@ public sealed class ListDriveCommand : Command<ListDriveCommand.Settings>
 
     #region Methods
 
-    public override int Execute(CommandContext context, Settings settings)
+    /// <summary>
+    /// Lists all drives that are DCIM-compliant.
+    /// </summary>
+    /// <returns>
+    /// Returns 0 if the command executes successfully; 
+    /// returns a non-zero error code otherwise.
+    /// </returns>
+    [Command("")]
+    public int Execute()
     {
-       _output.AppTitle();
+        _output.AppTitle();
         var drives = _driveService.GetDcimDrives().ToArray();
         if (drives.Length == 0)
         {
-            _output.Warning(":HollowRedCircle: No drives found...");
+            _output.Warning(":hollow_red_circle: No drives found...");
             return 0;
         }
-        
+
         _output.RenderDriveList(drives);
 
         return 0;
     }
 
     #endregion
-
-    public sealed class Settings : CommandSettings;
 }

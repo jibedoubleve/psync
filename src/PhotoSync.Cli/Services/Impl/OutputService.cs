@@ -28,12 +28,13 @@ public partial class OutputService : IOutputService
 
     public void AppTitle()
     {
-        EmptyLine();
-        var figlet = new FigletText("Photo sync")
+        const string title = "Photo Sync";
+        var rule = new Rule($"[cyan]{title}[/]")
         {
-            Color = Color.Fuchsia
+            Justification = Justify.Left
         };
-        AnsiConsole.Write(figlet);
+        AnsiConsole.Write(rule);
+        EmptyLine();
     }
 
     public bool AskConfirmation(string question)
@@ -76,7 +77,7 @@ public partial class OutputService : IOutputService
         AnsiConsole.Write(table);
     }
 
-    public void RenderKeyValueList(string title, IEnumerable<(string Key, string Value)> tableRows)
+    public void RenderKeyValueList(string title, IEnumerable<Parameter> tableRows)
     {
         var rows = tableRows.ToArray();
         if (rows.Length < 2) return;
@@ -96,14 +97,13 @@ public partial class OutputService : IOutputService
         {
             IRenderable key = new Markup(row.Key);
 
-            var value = PathRenderer.IsRenderable(row.Value)
-                ? PathRenderer.ToRenderable(row.Value)
+            var value = CliRenderer.IsRenderablePath(row.Value)
+                ? CliRenderer.ToRenderablePath(row.Value)
                 : new Markup(row.Value);
 
             table.AddRow(key, value);
         }
 
-        EmptyLine(2);
         AnsiConsole.Write(table);
     }
 

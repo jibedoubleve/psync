@@ -13,11 +13,8 @@ public interface IConfigurationService
     #region Methods
 
     Configuration LoadConfiguration();
-    string NormalisePath(string path);
 
     void SaveConfiguration(Configuration configuration);
-
-    void ThrowIfInvalidDate(string isoDate);
 
     #endregion
 }

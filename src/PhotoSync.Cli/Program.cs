@@ -1,32 +1,34 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using ConsoleAppFramework;
+using Microsoft.Extensions.DependencyInjection;
 using PhotoSync.Cli.Commands;
-using PhotoSync.Cli.Infrastructure.DI;
 using PhotoSync.Cli.Services;
 using PhotoSync.Cli.Services.Impl;
-using Spectre.Console.Cli;
+
+
+var app = ConsoleApp.Create();
 
 /*
  * Dependency Injection
  */
-var registrations = new ServiceCollection();
-registrations.AddSingleton<IOutputService, OutputService>();
-registrations.AddSingleton<IConfigurationService, ConfigurationService>();
+app.ConfigureServices(registrations =>
+{
+    registrations.AddSingleton<IOutputService, OutputService>();
+    registrations.AddSingleton<IConfigurationService, ConfigurationService>();
 
-registrations.AddSingleton<ISynchronisationService, SynchronisationService>();
-registrations.AddSingleton<IDriveService, DriveService>();
+    registrations.AddSingleton<ISynchronisationService, SynchronisationService>();
+    registrations.AddSingleton<IDriveService, DriveService>();
 
-var registrar = new TypeRegistrar(registrations);
+    registrations.AddSingleton<ConfigurationCommand>();
+    registrations.AddSingleton<ListDriveCommand>();
+    registrations.AddSingleton<SynchronisationService>();
+});
 
 /*
  * Command Line arguments
  */
-var app = new CommandApp(registrar);
-app.Configure(cfg =>
-{
-    cfg.AddCommand<ListDriveCommand>("list");
-    cfg.AddCommand<ConfigurationCommand>("config");
-    cfg.AddCommand<SynchronizationCommand>("sync");
-});
+app.Add<ListDriveCommand>("list-drive");
+app.Add<ConfigurationCommand>("config");
+app.Add<SynchronisationCommand>("sync");
 
 /*
  * Application start

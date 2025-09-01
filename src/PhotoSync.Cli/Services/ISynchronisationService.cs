@@ -9,7 +9,7 @@ public interface ISynchronisationService
 
     IEnumerable<Photo> GetFilesToSynchronise(string inputDirectory, DateTime from);
 
-    Task<SyncResult> SynchroniseAsync(Photo photo, string destination);
+    Task<SyncResult> ExecuteAsync(Photo photo, string destination);
 
     #endregion
 }

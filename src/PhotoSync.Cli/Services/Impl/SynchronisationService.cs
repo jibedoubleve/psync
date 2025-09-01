@@ -14,7 +14,7 @@ public class SynchronisationService : ISynchronisationService
             .Select(f => new Photo(f.FullName, f.Name, f.CreationTime));
     }
 
-    public Task<SyncResult> SynchroniseAsync(
+    public Task<SyncResult> ExecuteAsync(
         Photo file, string destination)
     {
         var isDirectoryCreated = false;

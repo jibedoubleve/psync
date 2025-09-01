@@ -1,16 +1,20 @@
+using System.ComponentModel;
+using ConsoleAppFramework;
 using PhotoSync.Cli.Models;
 using PhotoSync.Cli.Services;
-using Spectre.Console.Cli;
+using PhotoSync.Cli.Utils;
 
 namespace PhotoSync.Cli.Commands;
 
-public sealed class ConfigurationCommand : Command<ConfigurationCommand.Settings>
+/// <summary>
+///     Configure the application configuration.
+/// </summary>
+[Description("Configure the application configuration.")]
+public sealed class ConfigurationCommand
 {
     #region Fields
 
-    private readonly IConfigurationService _config;
-    private readonly IDriveService _driveService;
-
+    private readonly IConfigurationService _configService;
     private readonly IOutputService _output;
 
     #endregion
@@ -19,70 +23,120 @@ public sealed class ConfigurationCommand : Command<ConfigurationCommand.Settings
 
     public ConfigurationCommand(
         IOutputService output,
-        IConfigurationService config,
-        IDriveService driveService)
+        IConfigurationService configService)
     {
         _output = output;
-        _config = config;
-        _driveService = driveService;
+        _configService = configService;
     }
 
     #endregion
 
     #region Methods
 
-    private bool Override(Settings settings, Configuration with)
+    private static bool HandleParameters(
+        string outputPath,
+        string lastSync,
+        ref Configuration configuration)
     {
-        var updated = false;
-        if (!string.IsNullOrEmpty(settings.LastSync))
+        bool isUpdated;
+        if (!string.IsNullOrWhiteSpace(outputPath))
         {
-            _config.ThrowIfInvalidDate(with.LastSync);
-            with.LastSync = settings.LastSync;
-            updated = true;
+            configuration.OutputPath = outputPath;
+            configuration.OutputPath = ConfigUtils.NormalisePath(configuration.OutputPath);
+            CreateDirectory(outputPath);
+            isUpdated = true;
         }
 
-        if (!string.IsNullOrEmpty(settings.OutputPath))
+        if (!string.IsNullOrWhiteSpace(lastSync))
         {
-            with.OutputPath = settings.OutputPath;
-            updated = true;
+            if (!DateTime.TryParse(lastSync, out _))
+            {
+                configuration.LastSync = ConfigUtils.NormalizeDate();
+                isUpdated = false;
+            }
+            else
+            {
+                configuration.LastSync = ConfigUtils.NormalizeDate(lastSync);
+                isUpdated = true;
+            }
+        }
+        else
+        {
+            configuration.LastSync = ConfigUtils.NormalizeDate();
+            isUpdated = false;
         }
 
-        return updated;
+        return isUpdated;
     }
 
-    public override int Execute(CommandContext context, Settings settings)
+    private static void CreateDirectory(string outputPath)
+    {
+        if (Directory.Exists(outputPath)) return;
+        
+        Directory.CreateDirectory(outputPath);
+    }
+
+    /// <summary>
+    ///     Sets the default configuration of the tool.
+    /// </summary>
+    /// <param name="output">
+    ///     -o,Specifies the default path where files will be saved.
+    /// </param>
+    /// <param name="lastSync">
+    ///     -s,Specifies the threshold date used to select files for synchronisation.
+    /// </param>
+    /// <returns>
+    ///     Returns 0 if the command executes successfully;
+    ///     returns a non-zero error code otherwise.
+    /// </returns>
+    [Command("set")]
+    public int SetConfiguration(string output = "", string lastSync = "1970-01-01")
     {
         _output.AppTitle();
-        var configuration = _config.LoadConfiguration();
+        var config = _configService.LoadConfiguration();
 
-        var isUpdated = Override(settings, configuration);
+        var isUpdated = HandleParameters(
+            output,
+            lastSync,
+            ref config
+        );
 
         _output.RenderKeyValueList("Configuration",
         [
-            ("Last sync", DateTime.Parse(configuration.LastSync).ToString("g")),
-            ("Output path", _config.NormalisePath(configuration.OutputPath)),
-            ("First DCIM drive", _driveService.GetFirstDcim())
+            Parameter.Valid("Last sync", ConfigUtils.NormalizeDate(config.LastSync)),
+            Parameter.Valid("Output path", ConfigUtils.NormalisePath(config.OutputPath))
         ]);
 
-        if (!isUpdated && !settings.IsInitializing) return 0;
+        if (!isUpdated) return 0;
 
-        _output.Information(":floppy_disk: Updating configuration.");
-        _config.SaveConfiguration(configuration);
+        _configService.SaveConfiguration(config);
+        _output.Information(":floppy_disk: Configuration has been updated.");
         _output.EmptyLine();
+        return 0;
+    } 
+    
+    /// <summary>
+    /// Lists the configuration saved in the configuration file.  If no configuration is set, displays the default values.
+    /// </summary>
+
+    /// <returns>
+    ///     Returns 0 if the command executes successfully;
+    ///     returns a non-zero error code otherwise.
+    /// </returns>
+    [Command("show")]
+    public int ShowConfiguration()
+    {
+        _output.AppTitle();
+        var config = _configService.LoadConfiguration();
+
+        _output.RenderKeyValueList("Configuration",
+        [
+            Parameter.Valid("Last sync", ConfigUtils.NormalizeDate(config.LastSync)),
+            Parameter.Valid("Output path", ConfigUtils.NormalisePath(config.OutputPath))
+        ]);
+
         return 0;
     }
 
     #endregion
-
-    public class Settings : CommandSettings
-    {
-        #region Properties
-
-        [CommandOption("-i|--input")] public string InputPath { get; set; } = "";
-        [CommandOption("--init")] public bool IsInitializing { get; set; }
-        [CommandOption("-d|--sync-date")] public string LastSync { get; set; } = "";
-        [CommandOption("-o|--output")] public string OutputPath { get; set; } = "";
-
-        #endregion
-    }
 }
